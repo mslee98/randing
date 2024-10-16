@@ -93,9 +93,9 @@ export default async function BlogList() {
                   {/* 썸네일 이미지 */}
                   <div className="w-full h-48 bg-gray-200">
                     {post.image ? (
-                      <img
+                      <Image
                         src={post.image}
-                        alt={`토지노 ${post.title}`}
+                        alt={`토토의집 블로그 썸네일 이미지 - ${post.title}`}
                         className="w-full h-full object-cover"
                       />
                     ) : (
