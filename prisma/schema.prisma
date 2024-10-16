@@ -8,15 +8,22 @@ generator client {
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
-
 model Post {
-  id        Int      @id @default(autoincrement()) // 고유한 ID 필드 추가
-  title     String   @unique                      // 제목을 고유 필드로 설정
-  slug      String   @unique                      // 슬러그 필드를 추가 (고유값)
-  excerpt   String
-  content   String   @db.LongText                 // content 필드를 긴 텍스트로 설정
-  image     String?                               // 이미지 필드는 선택 사항
-  createdAt DateTime @default(now())              // 생성 시간을 기본값으로 설정
+  id         Int      @id @default(autoincrement())
+  title      String   @unique
+  slug       String   @unique
+  excerpt    String
+  content    String   @db.LongText
+  image      String?
+  createdAt  DateTime @default(now())
+  category   Category? @relation(fields: [categoryId], references: [id]) // 선택 사항으로 변경
+  categoryId Int?                                      // 선택 사항으로 변경
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  posts     Post[]
 }
 
 // npx prisma migrate dev --name init 마이그레이션 실행

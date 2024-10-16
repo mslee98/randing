@@ -16,12 +16,14 @@ export default function Footer() {
                 </h2>
               </Link>
             </div>
-            <p className="mt-2 text-lg font-bold">1600-1234 <span className="text-sm">09:00-18:00</span></p>
-            <ul className="mt-2 text-sm">
-              <li>평일: 전반적인 상담 서비스</li>
-              <li>주말 및 공휴일: 문의 불가</li>
-              <li>일요일: 휴무</li>
-            </ul>
+            <div className='flex flex-col'>
+              <p className="mt-2 text-lg font-bold text-center">1600-1234 <span className="text-sm">09:00-18:00</span></p>
+              <ul className="mt-2 text-sm px-3">
+                <li>평일: 전반적인 상담 서비스</li>
+                <li>주말 및 공휴일: 문의 불가</li>
+                <li>일요일: 휴무</li>
+              </ul>
+            </div>
             <button className="bg-gray-200 mt-4 py-2 px-4">카톡 상담</button>
             <button className="bg-gray-200 mt-2 py-2 px-4">이메일 문의</button>
           </div>

@@ -30,6 +30,7 @@ function convertToSlug(text) {
 
 // 블로그 목록을 서버에서 fetch하여 페이지에 데이터를 전달
 export default async function BlogList() {
+  
   const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/posts`, {
     cache: "no-store",
   });

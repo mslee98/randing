@@ -24,25 +24,11 @@ export const metadata = {
   robots: "index, follow",
   charset: "UTF-8",
 
-  // Apple Touch Icons (해상도별로 추가)
-  "apple-touch-icon": [
-    { href: "/images/icons/apple-touch-icon-57x57.png", sizes: "57x57" },
-    { href: "/images/icons/apple-touch-icon-60x60.png", sizes: "60x60" },
-    { href: "/images/icons/apple-touch-icon-72x72.png", sizes: "72x72" },
-    { href: "/images/icons/apple-touch-icon-76x76.png", sizes: "76x76" },
-    { href: "/images/icons/apple-touch-icon-114x114.png", sizes: "114x114" },
-    { href: "/images/icons/apple-touch-icon-120x120.png", sizes: "120x120" },
-    { href: "/images/icons/apple-touch-icon-144x144.png", sizes: "144x144" },
-    { href: "/images/icons/apple-touch-icon-152x152.png", sizes: "152x152" },
-    { href: "/images/icons/apple-touch-icon-180x180.png", sizes: "180x180" },
-  ],
-
-  // Favicon 설정
-  "icon": [
-    { href: "/images/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-    { href: "/images/icons/favicon-96x96.png", sizes: "96x96", type: "image/png" },
-    { href: "/images/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-  ],
+  icons: {
+    icon: "/images/icons/favicon-32x32.png",
+    shortcut: "/images/icons/favicon-96x96.png",
+    apple: "/images/icons/apple-touch-icon-180x180.png",
+  },
 
   // Open Graph Meta Tags
   "og:site_name": "토토의집",
@@ -77,6 +63,9 @@ export default function RootLayout({ children }) {
     <html lang="ko">
       <Head>
         <link rel="alternate" type="application/rss+xml" title="RSS" href="/api/rss" />
+
+        
+
       </Head>
       <body
         className={`${NotoSansKR.variable} antialiased`}

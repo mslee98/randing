@@ -1,21 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
-import "./styles.css";
+import { useDropzone } from "react-dropzone";
 import { useRouter } from 'next/navigation';
 
-// Quill은 서버 사이드 렌더링과 호환되지 않으므로 dynamic import를 사용합니다.
+// ReactQuill은 서버 사이드 렌더링과 호환되지 않으므로 dynamic import를 사용합니다.
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
+
+const modules = {
+  toolbar: [
+    [{ header: '1'}, { header: '2'}, { header: [1, 2, 3, 4, 5, 6, false] }], // header 옵션을 Select 박스로 변경
+    [{ size: [] }],
+    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+    [{ list: 'ordered'}, { list: 'bullet' }],
+    ['link', 'image', 'video'], // 링크, 이미지, 동영상 추가
+    ['clean'],
+  ],
+};
 
 // 한글을 포함한 슬러그 변환 함수
 function convertToSlug(text) {
   return text
-    .replace(/[^a-zA-Z0-9가-힣\s-]/g, '') // 한글, 영문, 숫자, 공백만 허용
-    .replace(/\s+/g, '-') // 공백을 대시로 변환
-    .replace(/--+/g, '-') // 여러 개의 대시를 하나로 줄임
-    .replace(/^-+|-+$/g, '') // 앞뒤의 대시 제거
+    .replace(/\s+/g, '-')               // 공백을 대시로 변환
+    .replace(/[^a-zA-Z0-9가-힣-]/g, '') // 한글, 영문, 숫자만 허용, 특수문자는 제거
+    .replace(/--+/g, '-')               // 여러 개의 대시를 하나로 줄임
+    .replace(/^-+|-+$/g, '')            // 앞뒤의 대시 제거
     .trim();
 }
 
@@ -25,40 +36,65 @@ export default function PostForm() {
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
-  const [image, setImage] = useState(null);
+  const [thumbnail, setThumbnail] = useState(null); // 썸네일 이미지 상태
+  const [categories, setCategories] = useState([]); // 카테고리 리스트
+  const [selectedCategory, setSelectedCategory] = useState(""); // 선택된 카테고리
+
+  const onDrop = useCallback((acceptedFiles) => {
+    const file = acceptedFiles[0];
+    setThumbnail(Object.assign(file, {
+      preview: URL.createObjectURL(file),
+    }));
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: 'image/*',
+    maxFiles: 1,
+  });
+
+  // 카테고리 리스트를 불러오는 useEffect
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const response = await fetch("/api/categories");
+      const data = await response.json();
+      setCategories(data); // 카테고리 리스트 업데이트
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const slug = convertToSlug(title); // 한글 슬러그 생성
 
-    const formData = {
-      title,
-      slug, // 슬러그 저장
-      excerpt,
-      content,
-      image: image ? image.name : null,
-    };
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("slug", slug); // 슬러그 저장
+    formData.append("excerpt", excerpt);
+    formData.append("content", content);
+    formData.append("categoryId", selectedCategory); // 선택한 카테고리 ID 추가
+    
+    if (thumbnail) {
+      formData.append("image", thumbnail); // 썸네일 이미지 추가
+    }
 
     const response = await fetch("/api/posts", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
+      body: formData,
     });
 
     if (response.ok) {
       const post = await response.json(); // 등록된 게시글의 ID와 슬러그를 반환받음
-
-      // 게시글의 ID와 슬러그를 사용해 SEO 친화적인 URL로 리다이렉션
       router.push(`/blog/${post.id}/${slug}`);
 
       // 폼 초기화
       setTitle("");
       setExcerpt("");
       setContent("");
-      setImage(null);
+      setThumbnail(null);
+      setSelectedCategory("");
     } else {
       alert("오류가 발생했습니다.");
     }
@@ -97,18 +133,39 @@ export default function PostForm() {
           className="mt-1 h-60 h-auto"
           theme="snow"
           placeholder="내용을 입력하세요"
+          modules={modules}
         />
       </div>
 
+      {/* 카테고리 선택 */}
       <div>
-        <label htmlFor="image" className="block text-sm font-medium text-gray-700">이미지</label>
-        <input
-          id="image"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files[0])}
-          className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-        />
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700">카테고리</label>
+        <select
+          id="category"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          required
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        >
+          <option value="" disabled>카테고리를 선택하세요</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* 썸네일 이미지 업로드 (드래그 앤 드롭) */}
+      <div {...getRootProps()} className="border-2 border-dashed border-gray-400 p-6 rounded-lg flex items-center justify-center cursor-pointer">
+        <input {...getInputProps()} />
+        {!thumbnail ? (
+          <p className="text-gray-500">썸네일 이미지를 여기에 드래그 앤 드롭하거나 클릭해서 추가하세요.</p>
+        ) : (
+          <div className="w-full h-48 bg-gray-200 flex justify-center items-center">
+            <img src={thumbnail.preview} alt="업로드된 썸네일" className="w-full h-full object-cover" />
+          </div>
+        )}
       </div>
 
       <button
